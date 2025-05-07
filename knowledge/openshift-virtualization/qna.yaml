@@ -79,6 +79,6 @@ seed_example:
 
 document:
   repo: https://github.com/Surote/instructlab-taxonomy.git
-  commit: 5001e92132b3ef21320131749d41488e35351be0
+  commit: fbffe24906c5a69bc5143d336f1cbaa3c785299c
   patterns:
     - knowledge.md
