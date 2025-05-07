@@ -5,7 +5,7 @@ document_outline: |
   The implementation guidelines and a sample reference architecture for deploying Red Hat OpenShift as a platform for virtualization workloads using OpenShift Virtualization.
 # for multiple year document -> create separate qna for each year
 # seed_example: should be in 750 tokens(words)
-seed_example:
+seed_examples:
   # contexts: ~ 300-500 tokens
   - context: |
       The following additional configuration for kubelet is applied after the cluster is deployed.
