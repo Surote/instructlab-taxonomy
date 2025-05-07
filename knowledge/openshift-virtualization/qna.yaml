@@ -1,0 +1,84 @@
+version: 1
+domain: redhat openshift container platform virtualization
+created_by: swongpai-jhocha
+document_outline: |
+  The implementation guidelines and a sample reference architecture for deploying Red Hat OpenShift as a platform for virtualization workloads using OpenShift Virtualization.
+# for multiple year document -> create separate qna for each year
+# seed_example: should be in 750 tokens(words)
+seed_example:
+  # contexts: ~ 300-500 tokens
+  - context: |
+      The following additional configuration for kubelet is applied after the cluster is deployed.
+      Increase kubelet kubeAPIBurst to 200 and kubeAPIQPS to 100. Adjusting these values up from the default of 100 and 50, respectively, accommodates bulk object creation on the nodes. The lower values are useful on clusters with smaller nodes to keep API server resource utilization reasonable, however with larger nodes this is not an issue.
+      Set the maxPods per node to 500. By default, OpenShift sets the maximum Pods per node to 250. This value affects not just the Pods running core OpenShift services and node functions but also virtual machines. For large virtualization nodes that can host many virtual machines, this value is likely too small. If you're using very large nodes and may have more than 500 VMs and Pods on a node, this value can be increased beyond 500, however you will also need to adjust the size of the cluster network's host prefix when deploying the cluster.
+      Disable nodeStatusMaxImage . The scheduler factors both the count of container images and which container images are on a host when deciding where to place a Pod or virtual machine. For large nodes with many different Pods and VMs, this can lead to. et dynamic resource allocation for kubelet. The default CPU and memory reservation for kubelet is very small and not appropriate for nodes with large amounts of resources.
+      Configure CPU manager to enable dedicated resources for virtual machines to be assigned. Without CPU manager, virtual machines using dedicated CPU scheduling.
+      Configure soft eviction thresholds. Configuring soft eviction is valuable for several reasons, however the most important is that it sets the upper boundary for memory utilization on the nodes before the virtual machines are attempted to be moved to other hosts in the cluster.
+    # questions_and_ansers: ~250 tokens (max 3 pairs per context section)
+    questions_and_answers:
+      - question: |
+          What are the implications of setting maxPods per node to 500 in OpenShift?
+        answer: |
+          For large virtualization nodes that can host many virtual machines, this value is likely too small. If you're using very large nodes and may have more than 500 VMs and Pods on a node, this value can be increased beyond 500
+      - question: |
+          Why increase kubeAPIBurst to 200 and kubeAPIQPS to 100 in clusters with larger nodes?
+        answer: |
+          accommodates bulk object creation on the nodes. The lower values are useful on clusters with smaller nodes to keep API server resource utilization reasonable, however with larger nodes this is not an issue.
+      - question: |
+          How do CPU manager and soft eviction thresholds aid in managing resources for large virtualization workloads?
+        answer: |
+          Without CPU manager, virtual machines using dedicated CPU scheduling, such as those configured with the cx instance type, cannot be scheduled. Configuring soft eviction is valuable for several reasons, however the most important is that it sets the upper boundary for memory utilization on the nodes before the virtual machines are attempted to be moved to other hosts in the cluster.
+
+  - context: |
+      OpenShift Virtualization integrates Red Hat's KVM hypervisor into the OpenShift platform, allowing users to manage both containers and virtual machines (VMs) using Kubernetes. This integration provides a unified platform for diverse workloads, offering features such as live migration and load balancing. OpenShift Virtualization supports multiple deployment options, including on-premises and cloud environments. Effective resource management is crucial, involving settings like kubeAPIBurst and kubeAPIQPS for API handling, and configuring CPU and memory allocation to prevent resource starvation. Additionally, setting the maximum number of Pods per node and using dynamic resource allocation helps optimize performance on large nodes.
+    questions_and_answers:
+      - question: |
+          How does OpenShift Virtualization enable management of both containers and virtual machines?
+        answer: |
+          OpenShift Virtualization integrates the KVM hypervisor with Kubernetes, allowing users to manage both containers and virtual machines within the same platform. This integration provides a seamless experience, enabling features like live migration and resource management using Kubernetes' scheduling capabilities.
+      - question: |
+          Why is dynamic resource allocation important in OpenShift Virtualization?
+        answer: |
+          Dynamic resource allocation ensures that the kubelet has sufficient CPU and memory resources, preventing resource starvation as workloads increase. This is especially critical for nodes hosting a large number of Pods and VMs, maintaining performance and stability.
+      - question: |
+          What are kubeAPIBurst and kubeAPIQPS, and why are they adjusted in large node environments?
+        answer: |
+          kubeAPIBurst and kubeAPIQPS are settings that control the rate of API requests handled by the kubelet. Increasing these values in large node environments allows higher throughput of API requests, which is essential for efficiently managing bulk object creation and maintaining responsiveness.
+
+  - context: |
+      High availability (HA) in OpenShift Virtualization ensures that applications remain available despite failures. The control plane manages workload scheduling, redistributing tasks if nodes fail. OpenShift uses multiple control plane nodes to maintain operations even if one node fails. For disaster recovery, OpenShift supports various strategies, including using the OpenShift APIs for Data Protection (OADP) to create backups and restore workloads. These strategies help ensure business continuity by allowing applications to recover quickly from failures.
+    questions_and_answers:
+      - question: |
+          How does OpenShift ensure high availability for applications running on its platform?
+        answer: |
+          OpenShift ensures high availability by using multiple control plane nodes, which manage workload scheduling and redistribute tasks if nodes fail. This setup allows the platform to continue operating even if one control plane node becomes unavailable, maintaining application availability.
+      - question: |
+          What role does the OpenShift APIs for Data Protection (OADP) play in disaster recovery?
+        answer: |
+          The OpenShift APIs for Data Protection (OADP) facilitate disaster recovery by enabling users to create backups and restore workloads. This capability ensures that applications can be quickly recovered after a failure, supporting business continuity and minimizing downtime.
+      - question: |
+          What happens if all control plane nodes in OpenShift fail simultaneously?
+        answer: |
+          If all control plane nodes fail simultaneously, the cluster becomes offline and unreachable. Restoring the control plane is necessary to return the cluster to a functional state, highlighting the importance of maintaining robust control plane configurations and disaster recovery strategies.
+
+  - context: |
+      OpenShift Virtualization uses a software-defined network (SDN) to manage networking for Pods and VMs. This configuration allows VMs to have internal IP addresses and be accessed through Kubernetes services and routes. For storage, OpenShift utilizes the Persistent Volume (PV) paradigm, with each VM disk stored in dedicated persistent volumes managed via Container Storage Interface (CSI) drivers. Live migration of VMs requires RWX (read-write-many) access mode, ensuring disks can mount to source and destination nodes during migration.
+    questions_and_answers:
+      - question: |
+          How does OpenShift Virtualization manage networking for virtual machines?
+        answer: |
+          OpenShift Virtualization manages networking using a software-defined network (SDN), which provides VMs with internal IP addresses. These VMs can be accessed using Kubernetes services and routes, ensuring connectivity and integration with existing network policies.
+      - question: |
+          What is the role of Persistent Volumes in OpenShift Virtualization?
+        answer: |
+          Persistent Volumes (PVs) in OpenShift Virtualization store each VM disk in dedicated volumes managed by CSI drivers. This approach allows for granular control of storage resources and supports features like snapshots and resizing, ensuring that storage is tailored to VM workload requirements.
+      - question: |
+          Why is RWX access mode important for live migration in OpenShift Virtualization?
+        answer: |
+          RWX (read-write-many) access mode is important for live migration because it allows VM disks to be mounted on both source and destination nodes during migration. This capability is crucial for ensuring a smooth and uninterrupted migration process, enabling VMs to maintain their state and data integrity.
+
+document:
+  repo: https://github.com/hinunbi/etx-ai-hello.git
+  commit: 950e17787c07f59de510ecb456636f0946328744
+  patterns:
+    - knowledge.md
