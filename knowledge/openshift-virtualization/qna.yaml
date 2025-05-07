@@ -78,7 +78,7 @@ seed_example:
           RWX (read-write-many) access mode is important for live migration because it allows VM disks to be mounted on both source and destination nodes during migration. This capability is crucial for ensuring a smooth and uninterrupted migration process, enabling VMs to maintain their state and data integrity.
 
 document:
-  repo: https://github.com/hinunbi/etx-ai-hello.git
-  commit: 950e17787c07f59de510ecb456636f0946328744
+  repo: https://github.com/Surote/instructlab-taxonomy.git
+  commit: 5bf0e8de7f2f2db679a096eaf1d73e774c6258b9
   patterns:
     - knowledge.md
