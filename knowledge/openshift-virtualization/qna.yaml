@@ -77,6 +77,35 @@ seed_examples:
         answer: |
           RWX (read-write-many) access mode is important for live migration because it allows VM disks to be mounted on both source and destination nodes during migration. This capability is crucial for ensuring a smooth and uninterrupted migration process, enabling VMs to maintain their state and data integrity.
 
+  - context: |
+      The guide covers various aspects of implementation including physical cluster design (Micro, Small, Medium, and Large configurations), networking architecture, storage options, high availability, disaster recovery, and scalability considerations. It also provides specific configuration recommendations for kubelet, network interfaces, and OpenShift Data Foundation (ODF).
+    questions_and_answers:
+      - question: |
+          What are the four physical cluster designs recommended in the OpenShift Virtualization Reference Implementation Guide, and how do they differ in terms of node count and resource allocation?
+        answer: |
+          The OpenShift Virtualization Reference Implementation Guide recommends four physical cluster designs:
+          Micro: A three-node OpenShift cluster where all nodes serve multiple roles (control plane, storage, and compute). Each node has 64 cores and 512 GiB memory. This configuration reserves 34% of compute and memory capacity for high availability and 10% for spare/burst capacity, resulting in 342 vCPU (with 4:1 overcommit) and 826 GiB memory available for workloads.
+          Small: A ten-node cluster with differentiated roles: three nodes for control plane and compute, three for storage and compute, and four dedicated compute nodes. This design reserves 20% of capacity for high availability and 10% for spare/burst, providing 1,532 vCPU and 3,496 GiB memory for workloads.
+          Medium: A fifteen-node cluster with three control plane + compute nodes, three storage + compute nodes, and nine dedicated compute nodes. It reserves 10% for high availability and 10% for spare/burst, yielding 2,345 vCPU and 5,177 GiB memory for workloads.
+          Large: An extension of the Medium design that scales further, with the recommendation to consider non-converged storage based on specific use cases. It maintains the three-node control plane but scales compute and storage nodes independently.
+      - question: |
+          How does OpenShift Virtualization handle networking for virtual machines, and what options are available for providing external access to VM-hosted applications?
+        answer: |
+          OpenShift Virtualization provides multiple networking options for virtual machines. By default, VMs connect to the cluster's software-defined network (SDN), which gives them the same connectivity features as Pod-based applications, including internal DNS resolution and network policies.
+          For external access to VM-hosted applications, the guide outlines several approaches:
+          Service and Route: For HTTP(S)-based applications using ports 80 or 443, a Service can be created and mapped to an open port on the VM, with a Route exposing external access to the application.
+          LoadBalancer Service: For applications using other protocols or ports, a Service with type LoadBalancer can be used. The guide recommends MetalLB (preferably in L3 mode, with L2 mode as fallback) or partner solutions from F5 and Citrix.
+          Direct External Network Access: VMs can be configured with additional network interfaces connected to external networks (VLANs) using the Multus CNI, allowing the guest OS to be accessed directly using protocols like SSH.
+      - question: |
+          What are the key considerations for ensuring high availability in an OpenShift Virtualization environment?
+        answer: |
+          The OpenShift Virtualization Reference Implementation Guide outlines several key considerations for high availability (HA) and disaster recovery (DR):
+          For high availability:
+          VM-level HA: Virtual machines can be configured with different run strategies. The default "Always" ensures VMs automatically restart after crashes, while "RerunOnFailure" allows VMs to stay powered off if shut down from within the guest OS but still restarts them after node failures.
+          Node-level HA: The guide recommends implementing node health checks and the Fence Agents Remediation method to detect failures faster than the default five-minute Kubernetes timeout. This approach uses IPMI/BMC integration to power cycle failed physical servers, accelerating workload rescheduling.
+          Cluster-level HA: The architecture leverages OpenShift's three-node control plane design, which can continue functioning even with one failed node. With three nodes, the control plane maintains quorum; if two nodes fail, the control plane enters read-only mode.
+          Resource Reservation: The guide recommends reserving capacity (ranging from 10-34% depending on cluster size) to accommodate workloads from failed nodes, and setting soft eviction thresholds (typically 90-95% of memory utilization) to trigger VM migration before nodes become critically overloaded.
+
 document:
   repo: https://github.com/Surote/instructlab-taxonomy.git
   commit: fbffe24906c5a69bc5143d336f1cbaa3c785299c
